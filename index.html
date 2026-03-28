@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a0a" />
+<title>Daily System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0ede6;
+    --muted: rgba(240,237,230,0.4);
+    --hint: rgba(240,237,230,0.2);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.12);
+    --amber: #fbbf24;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    overscroll-behavior: none;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    padding: 52px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .date-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .app-title {
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .streak-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .streak-num {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .streak-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-track {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  .progress-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 48px;
+    text-align: right;
+  }
+
+  /* Content */
+  .content {
+    flex: 1;
+    padding: 8px 0 120px;
+    overflow-y: auto;
+  }
+
+  .section {
+    margin-bottom: 4px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 20px 8px;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    flex: 1;
+  }
+
+  .section-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hint);
+  }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .item:active {
+    background: var(--surface);
+  }
+
+  .item.done {
+    opacity: 0.38;
+  }
+
+  .item.done .item-text {
+    text-decoration: line-through;
+    text-decoration-color: var(--muted);
+  }
+
+  .cb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: transparent;
+  }
+
+  .item.done .cb {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .tick {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .item.done .tick {
+    opacity: 1;
+  }
+
+  .item-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  .item-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--hint);
+    margin-top: 2px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 20px;
+  }
+
+  /* Bottom reset bar */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    padding: 12px 20px 28px;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .reset-btn {
+    flex: 1;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .reset-btn:active {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .complete-all-btn {
+    flex: 2;
+    padding: 13px;
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    background: var(--green-dim);
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .complete-all-btn:active {
+    background: rgba(74,222,128,0.22);
+  }
+
+  /* All done banner */
+  .done-banner {
+    display: none;
+    margin: 20px 20px 0;
+    padding: 16px;
+    border: 1px solid var(--green);
+    border-radius: 12px;
+    background: var(--green-dim);
+    text-align: center;
+  }
+
+  .done-banner.show { display: block; }
+
+  .done-banner p {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 0.04em;
+  }
+
+  .done-banner .big {
+    font-size: 20px;
+    margin-bottom: 4px;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="date-label" id="date-label"></div>
+        <div class="app-title">Daily system</div>
+      </div>
+      <div class="streak-badge">
+        <div class="streak-num" id="streak-num">0</div>
+        <div class="streak-label">day streak</div>
+      </div>
+    </div>
+    <div class="progress-row">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-text" id="progress-text">0 / 0</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="done-banner" id="done-banner">
+      <span class="big">🔥</span>
+      <p>Day complete. Rest well.</p>
+    </div>
+    <div id="checklist"></div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="reset-btn" onclick="resetDay()">Reset</button>
+    <button class="complete-all-btn" onclick="markAllDone()">Mark all done</button>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  {
+    title: "Morning",
+    items: [
+      { id: "water1", text: "Drink 500ml water", time: "6:00 am" },
+      { id: "workout", text: "20–30 min workout", time: "6:15 am" },
+      { id: "shower", text: "Cold shower — 2 to 3 min", time: "6:45 am" },
+      { id: "breakfast", text: "High protein breakfast", time: "7:00 am" },
+      { id: "walk1", text: "10 min walk — get sunlight", time: "7:30 am" },
+    ]
+  },
+  {
+    title: "Deep work",
+    items: [
+      { id: "b1", text: "Block 1 — phone in another room", time: "8:00 – 9:30 am" },
+      { id: "b2", text: "Block 2", time: "9:50 – 11:20 am" },
+      { id: "b3", text: "Block 3", time: "11:40 am – 1:10 pm" },
+      { id: "b4", text: "Block 4", time: "1:30 – 3:00 pm" },
+      { id: "b5", text: "Block 5", time: "3:20 – 4:50 pm" },
+      { id: "b6", text: "Block 6", time: "5:10 – 6:40 pm" },
+      { id: "b7", text: "Block 7", time: "7:00 – 8:30 pm" },
+      { id: "b8", text: "Block 8", time: "9:00 – 10:30 pm" },
+    ]
+  },
+  {
+    title: "Key habits",
+    items: [
+      { id: "nap", text: "20 min power nap — alarm on", time: "2:00 – 2:20 pm" },
+      { id: "walk2", text: "Evening walk or light workout", time: "6:00 pm" },
+      { id: "dinner", text: "Light dinner", time: "by 8:30 pm" },
+      { id: "nochai", text: "No chai or coffee after 3 pm", time: "all day" },
+      { id: "water2", text: "Finish second litre of water", time: "by evening" },
+    ]
+  },
+  {
+    title: "Wind down",
+    items: [
+      { id: "review", text: "Review what you finished today", time: "10:30 pm" },
+      { id: "tomorrow", text: "Write 3 tasks for tomorrow", time: "10:40 pm" },
+      { id: "noscreen", text: "Phone away — no screens", time: "10:45 pm" },
+      { id: "sleep", text: "Lights out", time: "11:00 pm" },
+    ]
+  }
+];
+
+const ALL_IDS = SECTIONS.flatMap(s => s.items.map(i => i.id));
+const TODAY = new Date().toDateString();
+
+function getState() {
+  try { return JSON.parse(localStorage.getItem('ds_state') || '{}'); } catch { return {}; }
+}
+function saveState(s) {
+  try { localStorage.setItem('ds_state', JSON.stringify(s)); } catch {}
+}
+function getStreak() {
+  try { return JSON.parse(localStorage.getItem('ds_streak') || '{"count":0,"last":null}'); } catch { return { count: 0, last: null }; }
+}
+function saveStreak(s) {
+  try { localStorage.setItem('ds_streak', JSON.stringify(s)); } catch {}
+}
+
+let state = getState();
+
+if (state.__date !== TODAY) {
+  const wasComplete = ALL_IDS.every(id => state[id]);
+  if (wasComplete && state.__date) {
+    const streak = getStreak();
+    const prev = new Date(state.__date);
+    const yesterday = new Date(TODAY);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isConsec = prev.toDateString() === yesterday.toDateString();
+    saveStreak({ count: isConsec ? streak.count + 1 : 1, last: state.__date });
+  }
+  state = { __date: TODAY };
+  saveState(state);
+}
+
+function toggleItem(id) {
+  state[id] = !state[id];
+  saveState(state);
+  render();
+  checkComplete();
+}
+
+function resetDay() {
+  if (!confirm('Reset today's checklist?')) return;
+  state = { __date: TODAY };
+  saveState(state);
+  render();
+}
+
+function markAllDone() {
+  ALL_IDS.forEach(id => { state[id] = true; });
+  saveState(state);
+  render();
+  checkComplete();
+}
+
+function checkComplete() {
+  const done = ALL_IDS.every(id => state[id]);
+  if (done) {
+    const streak = getStreak();
+    if (streak.last !== TODAY) {
+      const prev = streak.last ? new Date(streak.last) : null;
+      const yesterday = new Date(TODAY);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const isConsec = prev && prev.toDateString() === yesterday.toDateString();
+      const newCount = isConsec ? streak.count + 1 : streak.count + 1;
+      saveStreak({ count: newCount, last: TODAY });
+      document.getElementById('streak-num').textContent = newCount;
+    }
+  }
+  document.getElementById('done-banner').classList.toggle('show', done);
+}
+
+function render() {
+  const doneCount = ALL_IDS.filter(id => state[id]).length;
+  const total = ALL_IDS.length;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
+
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = doneCount + ' / ' + total;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
+  document.getElementById('date-label').textContent = dateStr;
+
+  const streak = getStreak();
+  document.getElementById('streak-num').textContent = streak.count;
+
+  const container = document.getElementById('checklist');
+  container.innerHTML = '';
+
+  SECTIONS.forEach((section, si) => {
+    if (si > 0) {
+      const div = document.createElement('div');
+      div.className = 'divider';
+      container.appendChild(div);
+    }
+
+    const secDone = section.items.filter(i => state[i.id]).length;
+
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `<div class="section-title">${section.title}</div><div class="section-count">${secDone}/${section.items.length}</div>`;
+    container.appendChild(header);
+
+    section.items.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item' + (state[item.id] ? ' done' : '');
+      div.onclick = () => toggleItem(item.id);
+      div.innerHTML = `
+        <div class="cb">
+          <svg class="tick" width="10" height="8" viewBox="0 0 10 8" fill="none">
+            <path d="M1 4L3.5 6.5L9 1" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="item-body">
+          <div class="item-text">${item.text}</div>
+          <div class="item-time">${item.time}</div>
+        </div>`;
+      container.appendChild(div);
+    });
+  });
+
+  document.getElementById('done-banner').classList.toggle('show', doneCount === total && total > 0);
+}
+
+render();
+</script>
+</body>
+</html>
