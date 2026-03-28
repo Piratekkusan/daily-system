@@ -218,7 +218,7 @@
   }
 
   .item-text {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 400;
     color: var(--text);
     line-height: 1.45;
@@ -226,9 +226,28 @@
 
   .item-time {
     font-family: var(--mono);
-    font-size: 10px;
-    color: var(--hint);
-    margin-top: 2px;
+    font-size: 13px;
+    color: #7ecba1;
+    margin-top: 4px;
+  }
+
+  .progress-msg {
+    margin: 16px 20px 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--surface);
+    border-left: 3px solid var(--amber);
+  }
+
+  .progress-msg p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .progress-msg strong {
+    color: var(--amber);
+    font-weight: 500;
   }
 
   .divider {
@@ -342,6 +361,7 @@
       <span class="big">🔥</span>
       <p>Day complete. Rest well.</p>
     </div>
+    <div class="progress-msg" id="progress-msg" style="display:none"></div>
     <div id="checklist"></div>
   </div>
 
@@ -474,6 +494,26 @@ function render() {
 
   document.getElementById('progress-fill').style.width = pct + '%';
   document.getElementById('progress-text').textContent = doneCount + ' / ' + total;
+
+  const msgEl = document.getElementById('progress-msg');
+  const MESSAGES = [
+    { min: 0,  max: 0,  text: `<strong>Day zero.</strong> The first item you check off is the hardest. Start there.` },
+    { min: 1,  max: 10, text: `<strong>You've started.</strong> That's already more than most people. Keep moving.` },
+    { min: 11, max: 25, text: `<strong>Good momentum.</strong> Don't stop now — this is where habits are built.` },
+    { min: 26, max: 40, text: `<strong>Quarter done.</strong> Your future clients will never know how early you started. Keep going.` },
+    { min: 41, max: 55, text: `<strong>Halfway there.</strong> Most people quit around here. You're not most people.` },
+    { min: 56, max: 70, text: `<strong>Past the halfway mark.</strong> The hard part is done. Finish what you started.` },
+    { min: 71, max: 85, text: `<strong>Almost there.</strong> This is what separates the $200/month editors from the $2k ones.` },
+    { min: 86, max: 99, text: `<strong>So close.</strong> Don't let the day end incomplete. You'll thank yourself tomorrow.` },
+    { min: 100, max: 100, text: `<strong>Day complete.</strong> This is exactly who you said you wanted to become.` },
+  ];
+  const match = MESSAGES.find(m => pct >= m.min && pct <= m.max);
+  if (match && doneCount < total) {
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = `<p>${match.text}</p>`;
+  } else {
+    msgEl.style.display = 'none';
+  }
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase();
