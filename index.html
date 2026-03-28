@@ -7,8 +7,6 @@
 <meta name="theme-color" content="#0a0a0a" />
 <title>Daily System</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   :root {
@@ -22,8 +20,8 @@
     --green: #4ade80;
     --green-dim: rgba(74,222,128,0.12);
     --amber: #fbbf24;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   html, body {
@@ -439,7 +437,7 @@ function toggleItem(id) {
 }
 
 function resetDay() {
-  if (!confirm('Reset today's checklist?')) return;
+  if (!confirm('Reset todays checklist?')) return;
   state = { __date: TODAY };
   saveState(state);
   render();
